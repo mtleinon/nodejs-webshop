@@ -3,7 +3,17 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const db = require('./util/database');
 const errorController = require('./controllers/error');
+
+// Testing
+db.execute('SELECT * FROM products')
+    .then(result => {
+        console.log(result[0]);
+    })
+    .catch(error => {
+        console.log(error);
+    });
 
 const app = express();
 
@@ -15,6 +25,11 @@ const shopRoutes = require('./routes/shop');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', (req, res, next) => {
+    console.log('1. middleware. Received request', req.method, req.url, req.body, req.params);
+    next();
+});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);

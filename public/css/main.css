@@ -19,6 +19,10 @@ form {
   display: inline;
 }
 
+.centered {
+  text-align: center;
+}
+
 .main-header {
   width: 100%;
   height: 3.5rem;
@@ -193,6 +197,30 @@ form {
   color: white;
 }
 
+
+.cart__product {
+  max-width: 40rem;
+  display: flex;
+
+  border-bottom: 1px #aaa solid;
+  align-items: center;
+
+  padding: .3rem 0;
+}
+.cart__product-title {
+  display: inline-block;
+  flex-basis: 70%;
+}
+.cart__product-qty {
+  display: inline-block;
+  flex-basis: 10%;
+}
+.cart__product btn {
+  display: inline-block;
+  justify-self: right;
+  flex-basis: 20%;
+}
+
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;
@@ -202,3 +230,4 @@ form {
     display: none;
   }
 }
+
