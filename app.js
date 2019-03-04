@@ -7,13 +7,13 @@ const db = require('./util/database');
 const errorController = require('./controllers/error');
 
 // Testing
-db.execute('SELECT * FROM products')
-    .then(result => {
-        console.log(result[0]);
-    })
-    .catch(error => {
-        console.log(error);
-    });
+// db.execute('SELECT * FROM products')
+//     .then(result => {
+//         console.log(result[0]);
+//     })
+//     .catch(error => {
+//         console.log(error);
+//     });
 
 const app = express();
 
