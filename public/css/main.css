@@ -18,6 +18,20 @@ main {
 form {
   display: inline;
 }
+.container {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.image {
+  border-bottom: 1px #aaa solid;
+  border-top: 1px #aaa solid;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.image img {
+  display: block;
+  width: 100%;
+}
 
 .centered {
   text-align: center;

@@ -5,9 +5,9 @@
     <body>
         <%- include('../includes/navigation.ejs') %>
             <h1 class="product__title, centered">
-                Details of: <%= product.title %>
+                <%= product.title %>
             </h1>
-            <div class="card__image">
+            <div class="image">
                 <img src="<%= product.imageUrl %>" alt="<%= product.title %>">
             </div>
             <div class="card__content">
