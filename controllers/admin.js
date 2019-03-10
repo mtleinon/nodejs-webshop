@@ -1,8 +1,9 @@
 const Product = require('../models/product');
-const mongodb = require('mongodb');
+// const mongodb = require('mongodb');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
+    isAuthenticated: req.isLoggedIn,
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     editMode: false
@@ -24,6 +25,7 @@ exports.getEditProduct = (req, res, next) => {
     .then(product => {
       console.log(product);
       res.render('admin/edit-product', {
+        isAuthenticated: req.isLoggedIn,
         pageTitle: 'Add Product',
         path: '/admin/edit-product',
         product: product,
@@ -36,21 +38,26 @@ exports.getEditProduct = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   console.log('delete', req.url);
   const productId = req.body.productId;
-  Product.deleteById(productId)
+  Product.findByIdAndDelete(productId)
     .then(result => {
       console.log('Product deleted');
       res.redirect('/admin/products');
     })
-    .catch(err => console.log('destroy product', err));
+    .catch(err => console.log('CATCH: Delete product', err));
 };
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
   const price = parseFloat(req.body.price);
   const description = req.body.description;
-  const newProduct = new Product(title, price, 
-      description, imageUrl, null, req.user._id);
+  const imageUrl = req.body.imageUrl;
+  const newProduct = new Product({
+    title: title,
+    price: price,
+    description: description,
+    imageUrl: imageUrl,
+    userId: req.user
+  });
   newProduct
     .save()
     .then(result => {
@@ -60,8 +67,6 @@ exports.postAddProduct = (req, res, next) => {
     .catch(err => console.log('CATCH: save', err));
 };
 
-
-
 exports.postEditProduct = (req, res, next) => {
   const productId = req.body.productId;
   const updatedTitle = req.body.title;
@@ -70,9 +75,14 @@ exports.postEditProduct = (req, res, next) => {
   const updatedDescription = req.body.description;
   console.log(productId);
 
-  (new Product (updatedTitle, updatedPrice, 
-      updatedDescription, updatedImageUrl, productId))
-    .save()
+  Product.findById(productId)
+    .then(product => {
+      product.title = updatedTitle;
+      product.price = updatedPrice;
+      product.description = updatedDescription;
+      product.imageUrl = updatedImageUrl;
+      return product.save();
+    })
     .then(result => {
       console.log('product updated');
       res.redirect('/admin/products');
@@ -81,9 +91,14 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll() 
+  Product.find()
+    // .select('title price -_id')
+    // .populate('userId', 'name')
     .then(products => {
+      console.log(products);
+      
       res.render('admin/products', {
+        isAuthenticated: req.isLoggedIn,
         prods: products,
         pageTitle: 'Admin Products',
         path: '/admin/products'
