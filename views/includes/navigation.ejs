@@ -24,25 +24,28 @@
                     <a class="<%= path === '/admin/products' ? 'active' : '' %>" href="/admin/products">Admin Products
                     </a>
                 </li>
-            <% } %>    
-        </ul>
-        <% if (!isAuthenticated) { %>
-            <ul class="main-header__item-list">
-                <li class="main-header__item">
-                    <a class="<%= path === '/login' ? 'active' : '' %>" href="/login">Login</a>
-                </li>
-                <li class="main-header__item">
-                    <a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup">Signup</a>
-                </li>
+                <% } %>    
             </ul>
-        <% } %>
-        <% if (isAuthenticated) { %>
-            <ul class="main-header__item-list">
-                <li class="main-header__item">
-                    <a class="<%= path === '/logout' ? 'active' : '' %>" href="/logout">Logout</a>
-                </li>
-            </ul>
-        <% } %>
+            <% if (!isAuthenticated) { %>
+                <ul class="main-header__item-list">
+                    <li class="main-header__item">
+                        <a class="<%= path === '/login' ? 'active' : '' %>" href="/login">Login</a>
+                    </li>
+                    <li class="main-header__item">
+                        <a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup">Signup</a>
+                    </li>
+                </ul>
+                <% } %>
+                <% if (isAuthenticated) { %>
+                    <ul class="main-header__item-list">
+                        <li class="main-header__item main-header__user">
+                            <%= email.split('@')[0] %>
+                        </li>
+                        <li class="main-header__item">
+                            <a class="<%= path === '/logout' ? 'active' : '' %>" href="/logout">Logout</a>
+                        </li>
+                    </ul>
+                    <% } %>
     </nav>
 </header>
 

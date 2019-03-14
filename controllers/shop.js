@@ -7,13 +7,17 @@ exports.getProducts = (req, res, next) => {
       console.log(products);
       
       res.render('shop/product-list', {
-        isAuthenticated: req.session.isLoggedIn,
         prods: products,
         pageTitle: 'All Products',
         path: '/products'
       });
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      console.log('CATCH: find:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
   };
   
   exports.getProduct = (req, res, next) => {
@@ -23,12 +27,17 @@ exports.getProducts = (req, res, next) => {
     Product.findById(productId)
     .then(product => {
         res.render('shop/product-detail', {
-          isAuthenticated: req.session.isLoggedIn,
           product: product,
           pageTitle: product.title,
           path: '/products'
         });
-    }).catch(err => console.log('CATCH: findProduct', err));
+    })
+    .catch(err => {
+      console.log('CATCH: find:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 }; 
 
 exports.getIndex = (req, res, next) => {
@@ -36,13 +45,17 @@ exports.getIndex = (req, res, next) => {
   Product.find()
     .then(products => {
       res.render('shop/index', {
-        isAuthenticated: req.session.isLoggedIn,
         prods: products,
         pageTitle: 'Shop', 
         path: '/'
       });
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      console.log('CATCH: find:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
   };
   
 exports.postAddProductToCart = (req, res, next) => {
@@ -55,14 +68,24 @@ exports.postAddProductToCart = (req, res, next) => {
       console.log(result);
       res.redirect('/cart');
     })
-    .catch(err => console.log('CATCH: ', err));
+    .catch(err => {
+      console.log('CATCH: findById:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
   
 exports.postCartDeleteItem = (req, res, next) => {
   const prodId = req.body.productId;
-   req.session.user.deleteFromCart(prodId)
+  req.session.user.deleteFromCart(prodId)
     .then(() => res.redirect('/cart'))
-    .catch(err => console.log('CATCH: delete cart', err));
+    .catch(err => {
+      console.log('CATCH: deleteFromCart:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 }
 
 // TODO: If product is removed from shop, set it to removed state and show it in the cart
@@ -76,13 +99,17 @@ exports.getCart = (req, res, next) => {
     console.log(products);
     
     res.render('shop/cart', {
-      isAuthenticated: req.session.isLoggedIn,
       path: '/cart',
       pageTitle: 'Your Cart',
       products: products
     });
   })
-  .catch(err => console.log('CATCH: getCart', err));
+  .catch(err => {
+    console.log('CATCH: populate:', err.message)
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  });
 }
 
 
@@ -97,7 +124,7 @@ exports.postCreateOrder = (req, res, next) => {
       const order = new Order({
         user: {
           email:  req.session.user.email,
-          userId:  req.session.user
+          userId:  req.session.user._id
         },
         products: products
       });
@@ -110,18 +137,27 @@ exports.postCreateOrder = (req, res, next) => {
       console.log(result);
       res.redirect('/orders'); 
     })
-    .catch(err => console.log('CATCH: ', err));
+    .catch(err => {
+      console.log('CATCH: populate:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 }
   
   exports.getOrders = (req, res, next) => {
     Order.find({'user.userId':  req.session.user._id })
       .then(orders => {
         res.render('shop/orders', {
-          isAuthenticated: req.session.isLoggedIn,
           path: '/orders',
           pageTitle: 'Your Orders',
           orders: orders
         })
       })
-      .catch(err => console.log('CATCH: getOrders', err));
+      .catch(err => {
+        console.log('CATCH: find:', err.message)
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+      });
   };
