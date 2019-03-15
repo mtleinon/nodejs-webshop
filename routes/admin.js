@@ -1,4 +1,4 @@
-const path = require('path');
+//const path = require('path');
 
 const express = require('express');
 
@@ -16,7 +16,7 @@ router.post('/add-product',
     isAuth, 
     [
         body('title').isString().isLength({min: 3}).trim(),
-        body('imageUrl').isURL(),
+        // body('imageUrl').isURL(),
         body('price').isFloat(),
         body('description').isLength({min: 5, max: 400}).trim()
     ],
@@ -30,7 +30,7 @@ router.post('/edit-product',
         isAuth, 
         [
             body('title').isString().isLength({min: 3}).trim(),
-            body('imageUrl').isURL(),
+            // body('imageUrl').isURL(),
             body('price').isFloat(),
             body('description').isLength({min: 5, max: 400}).trim()
         ],

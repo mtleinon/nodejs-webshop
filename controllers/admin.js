@@ -1,6 +1,7 @@
-const Product = require('../models/product');
-// const mongodb = require('mongodb');
 const mongoose = require('mongoose');
+
+const Product = require('../models/product');
+const fileUtil = require('../util/file');
 
 const { validationResult } = require('express-validator/check');
 
@@ -50,24 +51,47 @@ exports.getEditProduct = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   console.log('delete', req.url);
   const productId = req.body.productId;
-  Product.deleteOne( {_id: productId, userId: req.session.user._id} )
-    .then(result => {
-      console.log('Product deleted');
-      res.redirect('/admin/products');
-    })
-    .catch(err => {
-      console.log('CATCH: deleteOne:', err.message)
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
-    });
-};
+
+  Product.findById(productId).then(product => {
+    if ( !product ) {
+      return next(new Error('Product not found' + productId));
+    }
+    fileUtil.deleteFile(product.imageUrl);
+    return Product.deleteOne( {_id: productId, userId: req.session.user._id} )
+  })
+  .then(result => {
+    console.log('Product deleted');
+    res.redirect('/admin/products');
+  })
+  .catch(err => {
+    console.log('CATCH: deleteOne:', err.message)
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  });
+}
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
   const price = parseFloat(req.body.price);
   const description = req.body.description;
-  const imageUrl = req.body.imageUrl;
+  //const imageUrl = req.body.imageUrl;
+  const image = req.file;
+  if (!image) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/edit-product',
+      editMode: false,
+      hasError: true,
+      product: {
+        title: title,
+        price: price,
+        description: description
+      },
+      errorMessage: 'Attached file is not an image.',
+      validationErrors: [],
+    });
+  }
 
   const errors = validationResult(req);
 
@@ -81,7 +105,7 @@ exports.postAddProduct = (req, res, next) => {
       hasError: true,
       product: {
         title: title,
-        imageUrl: imageUrl,
+        // imageUrl: imageUrl,
         price: price,
         description: description
       },
@@ -89,6 +113,8 @@ exports.postAddProduct = (req, res, next) => {
       validationErrors: errors.array(),
     });
   }
+
+  imageUrl = image.path;
 
   const newProduct = new Product({
     // For testing Mongo duplicate id error: _id: new mongoose.Types.ObjectId('5c83a712e7b96f30b8f16e96'),
@@ -102,7 +128,7 @@ exports.postAddProduct = (req, res, next) => {
     .save()
     .then(result => {
       console.log(result);
-      res.redirect('/admin/add-product');
+      res.redirect('/admin/products');
     })
     .catch(err => {
       console.log('CATCH: save:', err.message)
@@ -116,7 +142,8 @@ exports.postAddProduct = (req, res, next) => {
 exports.postEditProduct = (req, res, next) => {
   const productId = req.body.productId;
   const updatedTitle = req.body.title;
-  const updatedImageUrl = req.body.imageUrl;
+  // const updatedImageUrl = req.body.imageUrl;
+  const image = req.file;
   const updatedPrice = parseFloat(req.body.price);
   const updatedDescription = req.body.description;
   console.log(productId);
@@ -132,7 +159,7 @@ exports.postEditProduct = (req, res, next) => {
       hasError: true,
       product: {
         title: updatedTitle,
-        imageUrl: updatedImageUrl,
+        // imageUrl: updatedImageUrl,
         price: updatedPrice,
         description: updatedDescription,
         _id: productId
@@ -150,7 +177,11 @@ exports.postEditProduct = (req, res, next) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDescription;
-      product.imageUrl = updatedImageUrl;
+      // product.imageUrl = updatedImageUrl;
+      if (image) {
+        fileUtil.deleteFile(product.imageUrl);
+        product.imageUrl = image.path;
+      }
       return product.save()
         .then(result => {
           console.log('product updated');
