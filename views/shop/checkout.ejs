@@ -1,0 +1,49 @@
+<%- include('../includes/head.ejs') %>
+</head>
+
+<body>
+  <%- include('../includes/navigation.ejs') %>
+  <main>
+    <div class="container">
+      <% if (products.length > 0) { %>
+      <h2>Cart: checkout</h2>
+      <ul>
+        <% products.forEach(p => { %>
+        <li class="cart__product">
+          <div class="cart__product-title">
+            <%= p.productId.title %>
+          </div>
+          <div class="cart__product-qty">
+            <%= p.quantity %>
+          </div>
+          <div class="cart__product-qty">
+            <%= p.productId.price %>
+          </div>
+        </li>
+        <% }) %>
+      </ul>
+      <div class="centered">Total: <%= totalSum %></div>
+      <div class="centered">
+        <form action="/create-order" method="POST">
+          <script
+            src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+            data-key="pk_test_sDLdxDevqO92iJKzcODTf8lW"
+            data-amount="<%= totalSum * 100 %>"
+            data-name="Your Order"
+            data-description="All the items you ordered"
+            data-image="https://stripe.com/img/documentation/checkout/marketplace.png"
+            data-locale="auto"
+            data-currency="eur">
+          </script>
+        </form>
+      </div>
+      <!-- <div class="centered ">
+        <a class="btn" href="/checkout">Order now!</a>
+      </div> -->
+      <% } else { %>
+      <h1>Cart is empty!</h1>
+      <% } %>
+    </div>
+  </main>
+
+  <%- include('../includes/end.ejs') %>

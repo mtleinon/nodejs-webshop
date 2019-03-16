@@ -4,11 +4,12 @@ const pdfkit = require('pdfkit');
 
 const Product = require('../models/product');
 const Order = require('../models/order');
+const passwords = require('../passwords/passwords');
 
 const ITEMS_IN_PAGE = 2;
 
 exports.getProducts = (req, res, next) => {
-  const page = +req.query.page || 1 ;
+  const page = +req.query.page || 1;
   let totalItems = 0;
   Product
     .find()
@@ -60,7 +61,7 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  const page = +req.query.page || 1 ;
+  const page = +req.query.page || 1;
   let totalItems = 0;
   Product
     .find()
@@ -145,12 +146,24 @@ exports.getCart = (req, res, next) => {
     });
 }
 
-
 exports.postCreateOrder = (req, res, next) => {
+  // Set your secret key: remember to change this to your live secret key in production
+  // See your keys here: https://dashboard.stripe.com/account/apikeys
+  var stripe = require("stripe")(passwords.stripeKey);
+
+  // Token is created using Checkout or Elements!
+  // Get the payment token ID submitted by the form:
+  const token = req.body.stripeToken; // Using Express
+
+  let totalSum = 0;
+
   req.session.user
     .populate('cart.items.productId')
     .execPopulate()
     .then(user => {
+      user.cart.items.forEach(p => {
+        totalSum += p.quantity * p.productId.price;
+      });
       const products = user.cart.items.map(i => {
         return {
           quantity: i.quantity,
@@ -169,6 +182,18 @@ exports.postCreateOrder = (req, res, next) => {
       return order.save();
     })
     .then(result => {
+      return stripe.charges.create({
+        amount: totalSum * 100,
+        currency: 'eur',
+        description: 'Order',
+        source: token,
+        metadata: {
+          order_id: result._id.toString()
+        }
+      });
+    })
+    .then (charge => {
+      console.log('Charged successfully', charge);
       return req.session.user.clearCart();
     })
     .then(result => {
@@ -176,7 +201,7 @@ exports.postCreateOrder = (req, res, next) => {
       res.redirect('/orders');
     })
     .catch(err => {
-      console.log('CATCH: populate:', err.message)
+      console.log('CATCH:', err)
       const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
@@ -267,26 +292,35 @@ exports.getInvoice = (req, res, next) => {
       printPdfInvoice(order, pdfDocument);
       pdfDocument.end();
 
-      // Stream the file to response. Use this for bigger files.
-      //
-      // const file = fs.createReadStream(invoicePath);
-      // res.setHeader('Content-Type', 'application/pdf');
-      // res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
-      // file.pipe(res);
-
-      // Read the whole file to a memory buffer and send it to browser
-      // This is not good for bigger files
-      //
-      // fs.readFile(invoicePath, (err, data) => {
-      //   if (err) {
-      //     return next(err);
-      //   }
-      //   res.setHeader('Content-Type', 'application/pdf');
-      //   res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
-      //   res.send(data);
-      // });
     })
     .catch(err => {
       return next(err);
+    });
+}
+
+exports.getCheckout = (req, res, next) => {
+
+  req.session.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      const products = user.cart.items;
+      console.log(products);
+      let totalSum = 0;
+      products.forEach(p => {
+        totalSum += p.quantity * p.productId.price;
+      });
+      res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products: products,
+        totalSum: totalSum
+      });
+    })
+    .catch(err => {
+      console.log('CATCH: populate:', err.message)
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 }

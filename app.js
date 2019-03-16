@@ -12,6 +12,9 @@ const multer = require('multer');
 const errorController = require('./controllers/error');
 const passwords = require('./passwords/passwords');
 
+const shopController = require('./controllers/shop');
+const isAuth = require('./middleware/is-auth');
+
 const app = express();
 
 // Mongo DB configuration
@@ -79,51 +82,50 @@ app.use(session({
 
 // CSRF protection
 
-app.use(csurfProtection);
+
 app.use((req, res, next) => {
-    res.locals.isAuthenticated = req.session.isLoggedIn;
-    res.locals.email = '';
-    res.locals.csrfToken = req.csrfToken();
-    next();
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.email = '';
+  next();
 });
 
 // If user is authenticated, convert user as mongoose object
 const User = require('./models/user');
 
 app.use((req, res, next) => {
-    if(req.session.user) {
-        User.findById(req.session.user._id)
-        .then(user => {
-            if (!user) {
-                return next();
-            }
-            req.session.user = user;
-            next();
-        })
-        .catch (err => {
-            // Express can handle this error
-            // Now we return page with 500 HTTP error status
-            next(new Error(err));
-        })
-    } else {
-        next();
-    }   
+  if(req.session.user) {
+    User.findById(req.session.user._id)
+    .then(user => {
+      if (!user) {
+        return next();
+      }
+      req.session.user = user;
+      next();
+    })
+    .catch (err => {
+      // Express can handle this error
+      // Now we return page with 500 HTTP error status
+      next(new Error(err));
+    })
+  } else {
+    next();
+  }   
 });
 
 // Properties of res.locals are available in every rendered view. So you don't
 // Have add them in the render function parameters.
 
 app.use((req, res, next) => {
-    if (req.session.user) {
-        res.locals.email = req.session.user.email;
-    }
-    next();
+  if (req.session.user) {
+    res.locals.email = req.session.user.email;
+  }
+  next();
 });
 
 // Write incoming http request to log to help testing
 app.use('/', (req, res, next) => {
-    console.log('1. middleware. Received request', req.method, req.url, req.body, req.params);
-    next();
+  console.log('1. middleware. Received request', req.method, req.url, req.body, req.params);
+  next();
 });
 
 // Add routes to app
@@ -131,6 +133,17 @@ app.use('/', (req, res, next) => {
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
+
+// "/create-order" route is not protected by us with csrf token so it is set
+// to middleware before csurfProtection.
+// Stripe handles the protection of this route.
+app.post('/create-order', isAuth, shopController.postCreateOrder);
+
+app.use(csurfProtection);
+app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
