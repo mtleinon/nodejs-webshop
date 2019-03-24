@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "cross-env NODE_ENV=production MONGO_USER=test MONGO_PASSWORD=test MONGO_DATABASE=shop STRIPE_KEY=sk_test_MxWWPpIJ6hxqpriV2dWw6jRR node app.js",
+    "start": "node app.js",
     "start:dev": "nodemon app.js",
     "start-server": "node app.js"
   },
