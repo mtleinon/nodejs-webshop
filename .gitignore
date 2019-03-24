@@ -2,3 +2,5 @@ node_modules
 passwords
 images
 data
+server.cert
+server.key
