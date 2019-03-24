@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const mongoose = require('mongoose');
 const express = require('express');
@@ -8,20 +9,29 @@ const bodyParser = require('body-parser');
 const csurf = require('csurf');
 const connectFlash = require('connect-flash');
 const multer = require('multer');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const https = require('https');
 
 const errorController = require('./controllers/error');
-const passwords = require('./passwords/passwords');
+// const passwords = require('./passwords/passwords');
 
 const shopController = require('./controllers/shop');
 const isAuth = require('./middleware/is-auth');
 
 const app = express();
 
-// Mongo DB configuration
+console.log('NODE_ENV =', process.env.NODE_ENV);
 
-const MONGODB_URI = 'mongodb+srv://test:' 
-    + passwords.test
-    + '@cluster0-ipmon.mongodb.net/shop?retryWrites=true';
+// Mongo DB configuration
+//test:
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-ipmon.mongodb.net/${process.env.MONGO_DATABASE}?retryWrites=true`;
+console.log(MONGODB_URI);
+
+// const MONGODB_URI = 'mongodb+srv://test:' 
+//     + passwords.test
+//     + '@cluster0-ipmon.mongodb.net/shop?retryWrites=true';
 
 const sessionStore = new MongoDBSessionStore({
     uri: MONGODB_URI,
@@ -53,6 +63,9 @@ const fileFilter = (req, file, cb) => {
         cb(null, false);
     }
 }
+
+const privateKey = fs.readFileSync('server.key');
+const certificate = fs.readFileSync('server.cert');
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -145,9 +158,18 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(helmet());
+app.use(compression());
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'), {flags: 'a'}
+);
+app.use(morgan('combined', { stream: accessLogStream}));
+
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
+
 
 app.get('/500', errorController.get500);
 
@@ -168,7 +190,10 @@ app.use((error, req, res, next) => {
 
 mongoose.connect(MONGODB_URI)
     .then(result => {
-        app.listen(3000);
-        console.log('Listening port 3000');
+      // https
+      //   .createServer({key: privateKey, cert: certificate}, app)
+      //   .listen(process.env.PORT || 3000);
+      app.listen(process.env.PORT || 3000);
+      console.log(`listening port ${process.env.PORT || 3000}`);
     })
     .catch(err => console.log('CATCH: mongoose.connect', err)); //TODO: return 500 page
