@@ -14,6 +14,6 @@ Below is the products screen of the Web Shop:
 
 ## App Demo
 
-The Video below shows how app works:
+Below is a video that shows how the app works:
 
 https://www.loom.com/share/4170f7d984b24401aed0fae6be8416ca
