@@ -8,7 +8,7 @@ You can try the application with the following link: https://evening-castle-8707
 
 ## Picture of the App's interface
 
-<img src="https://github.com/mtleinon/training/blob/master/images/webshop.jpg">
+<img src="https://github.com/mtleinon/training/blob/master/images/webshop.jpg" width="600px">
 
 
 ## App Demo
